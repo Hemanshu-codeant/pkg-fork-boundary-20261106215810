@@ -2,3 +2,4 @@ Synthetic marker for the authorized Actions policy boundary test.
 Synchronization trigger after the active actor/event policy was installed.
 Control trigger after the same policy was retargeted to the caller workflow.
 Independent repeat after retargeting the policy to the reusable workflow again.
+Runtime-identity capture for the policy-targeted reusable workflow.
