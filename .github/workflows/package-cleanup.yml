@@ -23,10 +23,8 @@ jobs:
           PACKAGE_NAME: ${{ inputs.package_name }}
         run: |
           set -euo pipefail
-          gh api --paginate "/user/packages/container/${PACKAGE_NAME}/versions" --jq '.[].id' |
-            while IFS= read -r version_id; do
-              case "$version_id" in
-                ''|*[!0-9]*) exit 2 ;;
-              esac
-              gh api --method DELETE "/user/packages/container/${PACKAGE_NAME}/versions/${version_id}"
-            done
+          case "$PACKAGE_NAME" in
+            critical-boundary-*) ;;
+            *) exit 2 ;;
+          esac
+          gh api --method DELETE "/user/packages/container/${PACKAGE_NAME}"
