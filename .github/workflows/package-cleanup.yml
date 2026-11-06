@@ -1,0 +1,32 @@
+name: package-fixture-cleanup
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_name:
+        description: "Exact synthetic container package name"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete only the requested synthetic package versions
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_NAME: ${{ inputs.package_name }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "/user/packages/container/${PACKAGE_NAME}/versions" --jq '.[].id' |
+            while IFS= read -r version_id; do
+              case "$version_id" in
+                ''|*[!0-9]*) exit 2 ;;
+              esac
+              gh api --method DELETE "/user/packages/container/${PACKAGE_NAME}/versions/${version_id}"
+            done
