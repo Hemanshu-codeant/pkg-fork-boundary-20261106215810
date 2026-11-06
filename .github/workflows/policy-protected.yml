@@ -1,0 +1,23 @@
+name: policy-protected-reusable
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  protected:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Emit only the synthetic canary hash
+        env:
+          POLICY_CANARY: ${{ secrets.POLICY_CANARY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$POLICY_CANARY"
+          canary_sha256="$(printf %s "$POLICY_CANARY" | sha256sum | cut -d ' ' -f 1)"
+          printf 'CANARY_SHA256=%s\n' "$canary_sha256"
+          printf 'PROTECTED_ACTOR=%s\n' "$GITHUB_ACTOR"
+          printf 'PROTECTED_EVENT=%s\n' "$GITHUB_EVENT_NAME"
