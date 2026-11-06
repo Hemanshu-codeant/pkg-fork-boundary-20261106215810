@@ -1,0 +1,53 @@
+name: package-boundary-probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_owner:
+        description: "Package namespace to test"
+        required: true
+        type: string
+      package_name:
+        description: "Synthetic package name"
+        required: true
+        type: string
+      marker:
+        description: "Inert marker"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build inert synthetic image
+        shell: bash
+        env:
+          TARGET_OWNER: ${{ inputs.target_owner }}
+          PACKAGE_NAME: ${{ inputs.package_name }}
+          MARKER: ${{ inputs.marker }}
+        run: |
+          set -euo pipefail
+          mkdir -p probe-root
+          printf '%s\n' "$MARKER" > probe-root/marker.txt
+          cat > Dockerfile <<'EOF'
+          FROM scratch
+          COPY probe-root/marker.txt /marker.txt
+          EOF
+          image="ghcr.io/${TARGET_OWNER,,}/${PACKAGE_NAME}:probe"
+          docker build --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" -t "$image" .
+      - name: Authenticate with this repository's ephemeral token
+        shell: bash
+        run: printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Push requested namespace
+        shell: bash
+        env:
+          TARGET_OWNER: ${{ inputs.target_owner }}
+          PACKAGE_NAME: ${{ inputs.package_name }}
+        run: docker push "ghcr.io/${TARGET_OWNER,,}/${PACKAGE_NAME}:probe"
