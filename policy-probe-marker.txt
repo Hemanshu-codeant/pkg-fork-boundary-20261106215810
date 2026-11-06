@@ -3,3 +3,4 @@ Synchronization trigger after the active actor/event policy was installed.
 Control trigger after the same policy was retargeted to the caller workflow.
 Independent repeat after retargeting the policy to the reusable workflow again.
 Runtime-identity capture for the policy-targeted reusable workflow.
+Reversible integrity-impact trigger while the reusable workflow policy is active.
